@@ -1528,9 +1528,8 @@ tcp_receive(struct tcp_pcb *pcb)
             if (next &&
                 TCP_SEQ_GT(seqno + tcplen,
                            next->tcphdr->seqno)) {
-              /* inseg cannot have FIN here (already processed above) */
               inseg.len = (u16_t)(next->tcphdr->seqno - seqno);
-              if (TCPH_FLAGS(inseg.tcphdr) & TCP_SYN) {
+              if (TCPH_FLAGS(inseg.tcphdr) & TCP_SYN || TCPH_FLAGS(inseg.tcphdr) & TCP_FIN) {
                 inseg.len -= 1;
               }
               pbuf_realloc(inseg.p, inseg.len);
