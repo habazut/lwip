@@ -1758,7 +1758,6 @@ tcp_kill_state(enum tcp_state state)
   struct tcp_pcb *pcb, *inactive;
   u32_t inactivity;
 
-  LWIP_ASSERT("invalid state", (state == CLOSING) || (state == LAST_ACK));
 
   inactivity = 0;
   inactive = NULL;
@@ -1864,11 +1863,31 @@ tcp_alloc(u8_t prio)
         /* Try to allocate a tcp_pcb again. */
         pcb = (struct tcp_pcb *)memp_malloc(MEMP_TCP_PCB);
         if (pcb == NULL) {
-          /* Try killing oldest active connection with lower priority than the new one. */
-          LWIP_DEBUGF(TCP_DEBUG, ("tcp_alloc: killing oldest connection with prio lower than %d\n", prio));
-          tcp_kill_prio(prio);
-          /* Try to allocate a tcp_pcb again. */
+          /* Try killing oldest connection in FIN_WAIT_2. */
+          LWIP_DEBUGF(TCP_DEBUG, ("tcp_alloc: killing off oldest FIN_WAIT_2 connection\n"));
+          tcp_kill_state(FIN_WAIT_2);
           pcb = (struct tcp_pcb *)memp_malloc(MEMP_TCP_PCB);
+          if (pcb == NULL) {
+            /* Try killing oldest connection in FIN_WAIT_1. */
+            LWIP_DEBUGF(TCP_DEBUG, ("tcp_alloc: killing off oldest FIN_WAIT_1 connection\n"));
+            tcp_kill_state(FIN_WAIT_1);
+            pcb = (struct tcp_pcb *)memp_malloc(MEMP_TCP_PCB);
+            if (pcb == NULL) {
+              /* Try killing oldest active connection with lower priority than the new one. */
+              LWIP_DEBUGF(TCP_DEBUG, ("tcp_alloc: killing oldest connection with prio lower than %d\n", prio));
+              tcp_kill_prio(prio);
+              /* Try to allocate a tcp_pcb again. */
+              pcb = (struct tcp_pcb *)memp_malloc(MEMP_TCP_PCB);
+              if (pcb != NULL) {
+                /* adjust err stats: memp_malloc failed multiple times before */
+                MEMP_STATS_DEC(err, MEMP_TCP_PCB);
+              }
+            }
+            if (pcb != NULL) {
+            /* adjust err stats: memp_malloc failed multiple times before */
+            MEMP_STATS_DEC(err, MEMP_TCP_PCB);
+            }
+          }
           if (pcb != NULL) {
             /* adjust err stats: memp_malloc failed multiple times before */
             MEMP_STATS_DEC(err, MEMP_TCP_PCB);
