@@ -104,8 +104,8 @@ static int deflate_level; /* default compression level, can be changed via comma
 #include "../httpd_structs.h"
 #include "lwip/apps/fs.h"
 
-#include "../core/inet_chksum.c"
-#include "../core/def.c"
+#include "../../../core/inet_chksum.c"
+#include "../../../core/def.c"
 
 /** (Your server name here) */
 static const char *serverID = "Server: "HTTPD_SERVER_AGENT"\r\n";
