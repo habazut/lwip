@@ -11,6 +11,8 @@
  *   PAYLOAD_ALIGN_TYPE/PAYLOAD_ALIGNMENT as arguments
  */
 
+#ifndef STM32F4    // should find better define that only is true when not cross-compiling
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1309,3 +1311,4 @@ int s_put_ascii(char *buf, const char *ascii_string, int len, int *i)
   }
   return len;
 }
+#endif
